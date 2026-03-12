@@ -3,7 +3,7 @@
 > A lightweight command security framework for civic digital infrastructure, combining Knight-Relaxed N-Queens key generation, grammar-based wrapping, and PDA tamper detection.
 
 **Team:** Vajra Protocol  
-**Members:** Prakhar Dwivedi, Pramod Batham, Sumit Yadav  
+**Members:** Prakhar Dwivedi 
 **Institution:** Rustamji Institute of Technology, Gwalior  
 **Research Base:** [A Modified N-Queens Algorithm Using Knight-Move Constraints](https://doi.org/10.5281/zenodo.18814740)
 
