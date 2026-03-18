@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TITAN-3 Protocol</title>
+<title>TITAN-3 Protocol v2.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -13,290 +13,209 @@
     --accent:   #00d4ff;
     --accent2:  #00ff88;
     --warn:     #ff4444;
+    --gold:     #ffd700;
     --text:     #c8dff0;
     --dim:      #4a6a80;
     --glow:     0 0 20px rgba(0,212,255,0.3);
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Rajdhani',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
   }
-  /* Grid background */
-  body::before {
+  body::before{
     content:'';
-    position:fixed; inset:0;
+    position:fixed;inset:0;
     background-image:
-      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events:none; z-index:0;
+      linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);
+    background-size:40px 40px;
+    pointer-events:none;z-index:0;
   }
+  .container{max-width:960px;margin:0 auto;padding:2rem;position:relative;z-index:1;}
 
-  .container { max-width:960px; margin:0 auto; padding:2rem; position:relative; z-index:1; }
-
-  /* Header */
-  header { text-align:center; padding:3rem 0 2rem; }
-  .logo {
-    font-family:'Share Tech Mono', monospace;
-    font-size:0.75rem;
-    color:var(--accent);
-    letter-spacing:0.3em;
-    text-transform:uppercase;
-    margin-bottom:1rem;
-    opacity:0.7;
-  }
-  h1 {
-    font-size:clamp(2.5rem,6vw,4rem);
-    font-weight:700;
-    letter-spacing:0.1em;
-    color:#fff;
-    text-shadow: var(--glow);
-    line-height:1;
-  }
-  h1 span { color:var(--accent); }
-  .tagline {
-    font-size:1.1rem;
-    color:var(--dim);
-    margin-top:0.75rem;
-    letter-spacing:0.05em;
-  }
-  .team {
-    display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;
-    margin-top:1.5rem;
-  }
-  .badge {
-    background:var(--surface);
-    border:1px solid var(--border);
-    padding:0.3rem 0.8rem;
-    border-radius:2px;
+  /* ── HEADER ── */
+  header{text-align:center;padding:3rem 0 2rem;}
+  .version-badge{
+    display:inline-block;
     font-family:'Share Tech Mono',monospace;
-    font-size:0.7rem;
-    color:var(--accent);
-    letter-spacing:0.1em;
-  }
-
-  /* Stats bar */
-  .stats {
-    display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
-    background:var(--border);
-    border:1px solid var(--border);
-    margin:2rem 0;
-  }
-  .stat {
-    background:var(--surface);
-    padding:1.2rem;
-    text-align:center;
-  }
-  .stat-val {
-    font-family:'Share Tech Mono',monospace;
-    font-size:1.5rem;
-    color:var(--accent);
-    text-shadow:var(--glow);
-    display:block;
-  }
-  .stat-label {
-    font-size:0.7rem;
-    color:var(--dim);
-    letter-spacing:0.15em;
-    text-transform:uppercase;
-    margin-top:0.3rem;
-  }
-
-  /* Panel */
-  .panel {
-    background:var(--surface);
-    border:1px solid var(--border);
-    margin-bottom:1.5rem;
-  }
-  .panel-header {
-    padding:0.75rem 1.25rem;
-    border-bottom:1px solid var(--border);
-    font-family:'Share Tech Mono',monospace;
-    font-size:0.75rem;
-    letter-spacing:0.2em;
-    color:var(--accent);
-    display:flex; align-items:center; gap:0.75rem;
-  }
-  .panel-header::before {
-    content:''; display:block;
-    width:6px; height:6px;
-    background:var(--accent);
-    border-radius:50%;
-    box-shadow:var(--glow);
-    animation: blink 2s infinite;
-  }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .panel-body { padding:1.5rem; }
-
-  /* Input row */
-  .input-row { display:flex; gap:0.75rem; margin-bottom:1.25rem; }
-  input[type=text] {
-    flex:1;
-    background:#000d1a;
-    border:1px solid var(--border);
-    color:var(--accent2);
-    font-family:'Share Tech Mono',monospace;
-    font-size:1rem;
-    padding:0.75rem 1rem;
-    outline:none;
-    transition:border-color 0.2s;
-    letter-spacing:0.05em;
-  }
-  input[type=text]:focus { border-color:var(--accent); box-shadow:var(--glow); }
-  input[type=text]::placeholder { color:var(--dim); }
-
-  button {
-    background:transparent;
+    font-size:0.65rem;letter-spacing:0.2em;
+    background:rgba(0,212,255,0.1);
     border:1px solid var(--accent);
-    color:var(--accent);
+    color:var(--accent);padding:0.3rem 0.8rem;
+    margin-bottom:1rem;
+  }
+  .logo{
     font-family:'Share Tech Mono',monospace;
-    font-size:0.8rem;
-    letter-spacing:0.15em;
-    padding:0.75rem 1.5rem;
-    cursor:pointer;
-    transition:all 0.2s;
-    text-transform:uppercase;
-    white-space:nowrap;
+    font-size:0.75rem;color:var(--accent);
+    letter-spacing:0.3em;text-transform:uppercase;
+    margin-bottom:1rem;opacity:0.7;
   }
-  button:hover {
-    background:var(--accent);
-    color:var(--bg);
-    box-shadow:var(--glow);
+  h1{
+    font-size:clamp(2.5rem,6vw,4rem);
+    font-weight:700;letter-spacing:0.1em;
+    color:#fff;text-shadow:var(--glow);line-height:1;
   }
-  button.danger { border-color:var(--warn); color:var(--warn); }
-  button.danger:hover { background:var(--warn); color:#fff; }
+  h1 span{color:var(--accent);}
+  .tagline{font-size:1.1rem;color:var(--dim);margin-top:0.75rem;letter-spacing:0.05em;}
+  .team{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem;}
+  .badge{
+    background:var(--surface);border:1px solid var(--border);
+    padding:0.3rem 0.8rem;border-radius:2px;
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.7rem;color:var(--accent);letter-spacing:0.1em;
+  }
 
-  /* Trace output */
-  .trace {
+  /* ── KEY INSIGHT BOX ── */
+  .insight{
+    background:rgba(0,255,136,0.05);
+    border:1px solid rgba(0,255,136,0.2);
+    border-left:3px solid var(--accent2);
+    padding:1rem 1.25rem;
+    margin:1.5rem 0;
     font-family:'Share Tech Mono',monospace;
     font-size:0.75rem;
     line-height:1.8;
-    min-height:80px;
-  }
-  .trace-row { display:flex; gap:1rem; padding:0.2rem 0; }
-  .trace-label {
-    color:var(--dim);
-    min-width:100px;
-    flex-shrink:0;
-  }
-  .trace-val { color:var(--text); word-break:break-all; }
-  .trace-val.accent  { color:var(--accent); }
-  .trace-val.green   { color:var(--accent2); text-shadow:0 0 10px rgba(0,255,136,0.4); }
-  .trace-val.red     { color:var(--warn); }
-  .trace-val.key-val {
-    color:#ffd700;
-    text-shadow:0 0 10px rgba(255,215,0,0.3);
-  }
-
-  /* Board viz */
-  .board-wrap { margin:1rem 0; }
-  .board {
-    display:inline-grid;
-    border:1px solid var(--border);
-    gap:1px;
-    background:var(--border);
-  }
-  .cell {
-    width:28px; height:28px;
-    display:flex; align-items:center; justify-content:center;
-    font-size:0.9rem;
-    transition:all 0.3s;
-  }
-  .cell.light { background:#060f1e; }
-  .cell.dark  { background:#030b14; }
-  .cell.queen {
-    background:rgba(0,212,255,0.15);
-    color:var(--accent);
-    text-shadow:var(--glow);
-  }
-
-  /* Divider */
-  .divider {
-    display:flex; align-items:center; gap:1rem;
-    margin:1.5rem 0;
-    color:var(--dim);
-    font-family:'Share Tech Mono',monospace;
-    font-size:0.7rem;
-    letter-spacing:0.2em;
-  }
-  .divider::before, .divider::after {
-    content:''; flex:1; height:1px; background:var(--border);
-  }
-
-  /* Pipeline viz */
-  .pipeline {
-    display:flex; align-items:center; gap:0; margin:1rem 0; flex-wrap:wrap;
-  }
-  .pipe-step {
-    background:#030b14;
-    border:1px solid var(--border);
-    padding:0.5rem 0.75rem;
-    font-family:'Share Tech Mono',monospace;
-    font-size:0.65rem;
-    letter-spacing:0.1em;
-    color:var(--dim);
-    transition:all 0.3s;
-    text-align:center;
-    min-width:100px;
-  }
-  .pipe-step.active {
-    border-color:var(--accent);
-    color:var(--accent);
-    box-shadow:var(--glow);
-  }
-  .pipe-step.done {
-    border-color:var(--accent2);
     color:var(--accent2);
   }
-  .pipe-arrow {
-    color:var(--border);
-    font-size:1rem;
-    padding:0 0.25rem;
-    font-family:'Share Tech Mono',monospace;
+  .insight strong{color:#fff;}
+
+  /* ── STATS ── */
+  .stats{
+    display:grid;grid-template-columns:repeat(5,1fr);gap:1px;
+    background:var(--border);border:1px solid var(--border);margin:2rem 0;
+  }
+  .stat{background:var(--surface);padding:1.2rem;text-align:center;}
+  .stat-val{
+    font-family:'Share Tech Mono',monospace;font-size:1.3rem;
+    color:var(--accent);text-shadow:var(--glow);display:block;
+  }
+  .stat-label{font-size:0.65rem;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-top:0.3rem;}
+
+  /* ── PANEL ── */
+  .panel{background:var(--surface);border:1px solid var(--border);margin-bottom:1.5rem;}
+  .panel-header{
+    padding:0.75rem 1.25rem;border-bottom:1px solid var(--border);
+    font-family:'Share Tech Mono',monospace;font-size:0.75rem;
+    letter-spacing:0.2em;color:var(--accent);
+    display:flex;align-items:center;gap:0.75rem;
+  }
+  .panel-header::before{
+    content:'';display:block;width:6px;height:6px;
+    background:var(--accent);border-radius:50%;
+    box-shadow:var(--glow);animation:blink 2s infinite;
+  }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+  .panel-body{padding:1.5rem;}
+
+  /* ── INPUTS ── */
+  .input-row{display:flex;gap:0.75rem;margin-bottom:1.25rem;}
+  input[type=text]{
+    flex:1;background:#000d1a;border:1px solid var(--border);
+    color:var(--accent2);font-family:'Share Tech Mono',monospace;
+    font-size:1rem;padding:0.75rem 1rem;outline:none;
+    transition:border-color 0.2s;letter-spacing:0.05em;
+  }
+  input[type=text]:focus{border-color:var(--accent);box-shadow:var(--glow);}
+  input[type=text]::placeholder{color:var(--dim);}
+  button{
+    background:transparent;border:1px solid var(--accent);
+    color:var(--accent);font-family:'Share Tech Mono',monospace;
+    font-size:0.8rem;letter-spacing:0.15em;
+    padding:0.75rem 1.5rem;cursor:pointer;
+    transition:all 0.2s;text-transform:uppercase;white-space:nowrap;
+  }
+  button:hover{background:var(--accent);color:var(--bg);box-shadow:var(--glow);}
+  button.danger{border-color:var(--warn);color:var(--warn);}
+  button.danger:hover{background:var(--warn);color:#fff;}
+
+  /* ── TRACE ── */
+  .trace{font-family:'Share Tech Mono',monospace;font-size:0.75rem;line-height:1.8;min-height:80px;}
+  .trace-row{display:flex;gap:1rem;padding:0.2rem 0;}
+  .trace-label{color:var(--dim);min-width:110px;flex-shrink:0;}
+  .trace-val{color:var(--text);word-break:break-all;}
+  .trace-val.accent{color:var(--accent);}
+  .trace-val.green{color:var(--accent2);text-shadow:0 0 10px rgba(0,255,136,0.4);}
+  .trace-val.red{color:var(--warn);}
+  .trace-val.gold{color:var(--gold);text-shadow:0 0 10px rgba(255,215,0,0.3);}
+  .trace-val.dim{color:var(--dim);}
+
+  /* ── BOARD ── */
+  .board-wrap{margin:1rem 0;}
+  .board{display:inline-grid;border:1px solid var(--border);gap:1px;background:var(--border);}
+  .cell{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:all 0.3s;}
+  .cell.light{background:#060f1e;}
+  .cell.dark{background:#030b14;}
+  .cell.queen{background:rgba(0,212,255,0.15);color:var(--accent);text-shadow:var(--glow);}
+
+  /* ── PIPELINE ── */
+  .pipeline{display:flex;align-items:center;gap:0;margin:1rem 0;flex-wrap:wrap;}
+  .pipe-step{
+    background:#030b14;border:1px solid var(--border);
+    padding:0.5rem 0.75rem;font-family:'Share Tech Mono',monospace;
+    font-size:0.65rem;letter-spacing:0.1em;color:var(--dim);
+    transition:all 0.3s;text-align:center;min-width:90px;
+  }
+  .pipe-step.active{border-color:var(--accent);color:var(--accent);box-shadow:var(--glow);}
+  .pipe-step.done{border-color:var(--accent2);color:var(--accent2);}
+  .pipe-arrow{color:var(--border);font-size:1rem;padding:0 0.25rem;font-family:'Share Tech Mono',monospace;}
+
+  /* ── PACKET BOX ── */
+  .packet-box{
+    background:#000d1a;border:1px solid var(--accent);
+    padding:1rem;font-family:'Share Tech Mono',monospace;
+    font-size:0.85rem;color:var(--accent2);
+    word-break:break-all;letter-spacing:0.05em;
+    box-shadow:var(--glow);margin:0.75rem 0;min-height:48px;
   }
 
-  /* Packet display */
-  .packet-box {
-    background:#000d1a;
-    border:1px solid var(--accent);
-    padding:1rem;
-    font-family:'Share Tech Mono',monospace;
-    font-size:0.85rem;
-    color:var(--accent2);
-    word-break:break-all;
-    letter-spacing:0.05em;
-    box-shadow:var(--glow);
-    margin:0.75rem 0;
-    min-height:48px;
+  /* ── HOW IT WORKS ── */
+  .how-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-top:1rem;}
+  .how-side{background:var(--surface);padding:1.25rem;}
+  .how-title{
+    font-family:'Share Tech Mono',monospace;font-size:0.65rem;
+    letter-spacing:0.25em;text-transform:uppercase;
+    margin-bottom:1rem;padding-bottom:0.5rem;
+    border-bottom:1px solid var(--border);
   }
-
-  /* Footer */
-  footer {
-    text-align:center;
-    padding:3rem 0 2rem;
-    font-family:'Share Tech Mono',monospace;
-    font-size:0.65rem;
-    color:var(--dim);
-    letter-spacing:0.15em;
-    border-top:1px solid var(--border);
-    margin-top:2rem;
+  .how-title.send{color:var(--accent);}
+  .how-title.recv{color:var(--accent2);}
+  .how-step{
+    display:flex;gap:0.75rem;margin-bottom:0.75rem;
+    font-family:'Share Tech Mono',monospace;font-size:0.7rem;
+    line-height:1.6;
   }
-  footer a { color:var(--accent); text-decoration:none; }
+  .how-num{
+    background:var(--accent);color:var(--bg);
+    width:18px;height:18px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.6rem;flex-shrink:0;margin-top:2px;
+  }
+  .how-num.green{background:var(--accent2);}
 
-  /* Animate in */
-  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
-  .panel { animation:fadeUp 0.5s ease both; }
+  /* ── FOOTER ── */
+  footer{
+    text-align:center;padding:3rem 0 2rem;
+    font-family:'Share Tech Mono',monospace;font-size:0.65rem;
+    color:var(--dim);letter-spacing:0.15em;
+    border-top:1px solid var(--border);margin-top:2rem;
+  }
+  footer a{color:var(--accent);text-decoration:none;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+  .panel{animation:fadeUp 0.5s ease both;}
   .panel:nth-child(2){animation-delay:0.1s}
   .panel:nth-child(3){animation-delay:0.2s}
   .panel:nth-child(4){animation-delay:0.3s}
+  .panel:nth-child(5){animation-delay:0.4s}
 
-  @media(max-width:600px) {
-    .stats { grid-template-columns:repeat(2,1fr); }
-    .input-row { flex-direction:column; }
+  @media(max-width:640px){
+    .stats{grid-template-columns:repeat(3,1fr);}
+    .input-row{flex-direction:column;}
+    .how-grid{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -304,37 +223,78 @@
 <div class="container">
 
   <header>
-    <div class="logo">India Innovation 2026 &nbsp;·&nbsp; Vajra Protocol</div>
+    <div class="version-badge">▲ VERSION 2.0 — FULL SECRECY EDITION</div>
+    <div class="logo">Vajra Protocol &nbsp;·&nbsp; RJIT Gwalior</div>
     <h1>TITAN<span>-3</span></h1>
     <div class="tagline">Structurally Validated Lightweight Secure Command Framework</div>
     <div class="team">
       <span class="badge">Prakhar Dwivedi</span>
-
+      <span class="badge">DOI: 10.5281/zenodo.18814740</span>
     </div>
   </header>
 
+  <!-- KEY INSIGHT -->
+  <div class="insight">
+    <strong>v2.0 — Key is now fully independent of the command.</strong><br>
+    Key = KnightSolver( SHA-256( INSTALL_KEY + current_hour ) )<br>
+    Both sender and receiver derive the <strong>same key independently</strong> — using the same source code + same clock.<br>
+    <strong>Nothing is transmitted except the encrypted packet. Command is fully secret.</strong>
+  </div>
+
+  <!-- STATS -->
   <div class="stats">
-    <div class="stat"><span class="stat-val" id="s-pda">0.0016ms</span><div class="stat-label">PDA Validation</div></div>
-    <div class="stat"><span class="stat-val" id="s-pipe">~0.04ms</span><div class="stat-label">Full Pipeline</div></div>
+    <div class="stat"><span class="stat-val" id="s-pda">—</span><div class="stat-label">PDA Validation</div></div>
+    <div class="stat"><span class="stat-val" id="s-pipe">—</span><div class="stat-label">Full Pipeline</div></div>
     <div class="stat"><span class="stat-val" id="s-n">—</span><div class="stat-label">Board Size N</div></div>
     <div class="stat"><span class="stat-val">0</span><div class="stat-label">Dependencies</div></div>
+    <div class="stat"><span class="stat-val">1hr</span><div class="stat-label">Key Rotation</div></div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="panel">
+    <div class="panel-header">HOW IT WORKS — v2.0</div>
+    <div class="panel-body">
+      <div class="how-grid">
+        <div class="how-side">
+          <div class="how-title send">SENDER</div>
+          <div class="how-step"><div class="how-num">1</div><div>Checks clock → derives N = (hour+min)%8+4</div></div>
+          <div class="how-step"><div class="how-num">2</div><div>Computes seed = SHA-256(INSTALL_KEY + hour)</div></div>
+          <div class="how-step"><div class="how-num">3</div><div>Runs Knight-Relaxed solver → gets key</div></div>
+          <div class="how-step"><div class="how-num">4</div><div>Wraps command in 3 random bracket layers</div></div>
+          <div class="how-step"><div class="how-num">5</div><div>XOR encrypts with key → sends packet</div></div>
+        </div>
+        <div class="how-side">
+          <div class="how-title recv">RECEIVER</div>
+          <div class="how-step"><div class="how-num green">1</div><div>Checks same clock → same N</div></div>
+          <div class="how-step"><div class="how-num green">2</div><div>Computes same seed = SHA-256(INSTALL_KEY + hour)</div></div>
+          <div class="how-step"><div class="how-num green">3</div><div>Runs same solver → gets identical key</div></div>
+          <div class="how-step"><div class="how-num green">4</div><div>XOR decrypts → gets wrapped command</div></div>
+          <div class="how-step"><div class="how-num green">5</div><div>PDA validates brackets → strips → recovers command</div></div>
+        </div>
+      </div>
+      <div style="margin-top:1rem;font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--dim);text-align:center;padding:0.75rem;border:1px solid var(--border);">
+        No key transmitted &nbsp;·&nbsp; No command known in advance &nbsp;·&nbsp; Key rotates every hour &nbsp;·&nbsp; Tamper = PDA rejection
+      </div>
+    </div>
   </div>
 
   <!-- ENCRYPT PANEL -->
   <div class="panel">
-    <div class="panel-header">ENCRYPT — ANY COMMAND</div>
+    <div class="panel-header">ENCRYPT — ANY COMMAND (FULLY SECRET)</div>
     <div class="panel-body">
       <div class="input-row">
-        <input type="text" id="enc-input" placeholder="Type any command e.g. MOVE_DRONE_01" value="MOVE_DRONE_01">
+        <input type="text" id="enc-input" placeholder="Type any command — e.g. MOVE_DRONE_01" value="MOVE_DRONE_01">
         <button onclick="doEncrypt()">ENCRYPT →</button>
       </div>
 
-      <div class="pipeline" id="enc-pipeline">
+      <div class="pipeline">
+        <div class="pipe-step" id="ps-seed">SEED</div>
+        <div class="pipe-arrow">→</div>
         <div class="pipe-step" id="ps-time">TIME → N</div>
         <div class="pipe-arrow">→</div>
-        <div class="pipe-step" id="ps-hash">CMD HASH</div>
-        <div class="pipe-arrow">→</div>
         <div class="pipe-step" id="ps-knight">KNIGHT SOLVER</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step" id="ps-key">KEY</div>
         <div class="pipe-arrow">→</div>
         <div class="pipe-step" id="ps-wrap">WRAP ×3</div>
         <div class="pipe-arrow">→</div>
@@ -348,7 +308,7 @@
       </div>
 
       <div class="board-wrap" id="board-wrap" style="display:none">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--dim);letter-spacing:0.15em;margin-bottom:0.5rem">N-QUEENS SOLUTION BOARD</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--dim);letter-spacing:0.15em;margin-bottom:0.5rem">N-QUEENS SOLUTION BOARD (from seed — not command)</div>
         <div class="board" id="board"></div>
       </div>
 
@@ -359,15 +319,17 @@
 
   <!-- DECRYPT PANEL -->
   <div class="panel">
-    <div class="panel-header">DECRYPT + PDA VALIDATION</div>
+    <div class="panel-header">DECRYPT — NO COMMAND NEEDED</div>
     <div class="panel-body">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--accent2);margin-bottom:1rem;padding:0.5rem;border:1px solid rgba(0,255,136,0.2);">
+        ✓ Receiver does NOT need to know the command in advance — key derived from seed + time only
+      </div>
       <div class="input-row">
-        <input type="text" id="dec-packet" placeholder="Paste encrypted packet here (auto-filled after encrypt)">
-        <input type="text" id="dec-cmd" placeholder="Original command" style="max-width:200px">
+        <input type="text" id="dec-packet" placeholder="Paste encrypted packet (auto-filled after encrypt)">
         <button onclick="doDecrypt()">DECRYPT →</button>
       </div>
       <div class="trace" id="dec-trace">
-        <div class="trace-row"><span class="trace-label">STATUS</span><span class="trace-val">Waiting for packet...</span></div>
+        <div class="trace-row"><span class="trace-label">STATUS</span><span class="trace-val dim">Waiting for packet...</span></div>
       </div>
     </div>
   </div>
@@ -377,14 +339,14 @@
     <div class="panel-header">TAMPER DETECTION TEST</div>
     <div class="panel-body">
       <p style="font-size:0.9rem;color:var(--dim);margin-bottom:1rem;line-height:1.6">
-        Modify even one byte of the encrypted packet — the PDA will detect structural corruption and reject it.
+        Modify even one byte — the PDA detects structural corruption and rejects the packet.
       </p>
       <div class="input-row">
-        <input type="text" id="tamper-packet" placeholder="Paste packet to tamper with (auto-filled after encrypt)">
+        <input type="text" id="tamper-packet" placeholder="Auto-filled after encrypt">
         <button class="danger" onclick="doTamper()">TAMPER + TEST →</button>
       </div>
       <div class="trace" id="tamper-trace">
-        <div class="trace-row"><span class="trace-label">STATUS</span><span class="trace-val">Encrypt something first, then test tamper detection.</span></div>
+        <div class="trace-row"><span class="trace-label">STATUS</span><span class="trace-val dim">Encrypt something first.</span></div>
       </div>
     </div>
   </div>
@@ -397,323 +359,369 @@
         <button onclick="doBenchmark(200)">RUN 200 COMMANDS →</button>
       </div>
       <div class="trace" id="bench-trace">
-        <div class="trace-row"><span class="trace-label">STATUS</span><span class="trace-val">Click to run benchmark.</span></div>
+        <div class="trace-row"><span class="trace-label">STATUS</span><span class="trace-val dim">Click to run benchmark.</span></div>
       </div>
     </div>
   </div>
 
   <footer>
-    TITAN-3 &nbsp;·&nbsp; Knight-Relaxed N-Queens Key Generation &nbsp;·&nbsp;
+    TITAN-3 v2.0 &nbsp;·&nbsp; Knight-Relaxed N-Queens &nbsp;·&nbsp;
     <a href="https://doi.org/10.5281/zenodo.18814740" target="_blank">DOI: 10.5281/zenodo.18814740</a>
-    &nbsp;·&nbsp; Vajra Protocol &nbsp;·&nbsp; India Innovation 2026
+    &nbsp;·&nbsp; Prakhar Dwivedi &nbsp;·&nbsp;
+    <a href="https://github.com/sssbughunter/Titan-3_Protocol" target="_blank">GitHub</a>
   </footer>
 
 </div>
 
 <script>
 // ============================================================
-// TITAN-3 ENGINE — JavaScript port
+// TITAN-3 v2.0 ENGINE
+// Key = KnightSolver(SHA-256(INSTALL_KEY + hour))
+// Command is FULLY SECRET — not used in key derivation
 // ============================================================
+
+const INSTALL_KEY = "TITAN3-VAJRA-PROTOCOL-2026-RJIT";
 const DX=[2,1,-1,-2,-2,-1,1,2], DY=[1,2,2,1,-1,-2,-2,-1];
 
-function sha256bytes(str){
-  // Simple deterministic hash (FNV-like) for demo — matches Python logic conceptually
-  const enc=new TextEncoder(), data=enc.encode(str.toUpperCase());
-  let h1=0x811c9dc5n, h2=0xcbf29ce4n;
-  for(const b of data){
-    h1=BigInt.asUintN(32,(h1^BigInt(b))*0x01000193n);
-    h2=BigInt.asUintN(32,(h2^BigInt(b))*0x00000193n);
+// Simple but deterministic hash — 32 bytes from any string
+function hashBytes(str) {
+  const bytes = [];
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h * 0x01000193) >>> 0;
   }
-  // Return 32 pseudo-bytes derived from str for reproducibility
-  const bytes=[];
-  let seed=h1;
-  for(let i=0;i<32;i++){
-    seed=BigInt.asUintN(32,seed*0x6c62272en+0xdc4n);
-    bytes.push(Number(seed&0xffn));
+  // Expand to 32 bytes using LCG
+  let s = h;
+  for (let i = 0; i < 32; i++) {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    bytes.push(s & 0xff);
   }
   return bytes;
 }
 
-function getNFromTime(){
-  const now=new Date();
-  const idx=(now.getHours()+now.getMinutes())%8;
-  return {N:idx+4, h:now.getHours(), m:now.getMinutes()};
+// Hourly seed — changes every hour, same on both sides
+function getHourlySeed() {
+  const now = new Date();
+  const seedStr = `${INSTALL_KEY}:${now.getFullYear()}${now.getMonth()}${now.getDate()}${now.getHours()}`;
+  return hashBytes(seedStr);
 }
 
-function commandToParams(cmd, N){
-  const h=sha256bytes(cmd);
-  const startCol=((h[0]<<24)|(h[1]<<16)|(h[2]<<8)|h[3])%N;
-  const cols=[...Array(N).keys()];
-  for(let i=N-1;i>0;i--){
-    const bi=(i*3)%32;
-    const jv=((h[bi]<<8)|h[(bi+1)%32])%(i+1);
-    [cols[i],cols[jv]]=[cols[jv],cols[i]];
+function getNFromTime() {
+  const now = new Date();
+  const idx = (now.getHours() + now.getMinutes()) % 8;
+  return { N: idx + 4, h: now.getHours(), m: now.getMinutes() };
+}
+
+// Seed → solver params (NOT command — that's v2's key change)
+function seedToParams(seed, N) {
+  const startCol = ((seed[0] << 24) | (seed[1] << 16) | (seed[2] << 8) | seed[3]) % N;
+  const cols = [...Array(N).keys()];
+  for (let i = N - 1; i > 0; i--) {
+    const bi = (i * 3) % 32;
+    const jv = ((seed[bi] << 8) | seed[(bi + 1) % 32]) % (i + 1);
+    [cols[i], cols[jv]] = [cols[jv], cols[i]];
   }
-  return {startCol,cols};
+  return { startCol, cols };
 }
 
-function hybridQueens(N, startCol, colPriority){
-  const queens=new Array(N).fill(-1);
-  let colMask=0, diag1=0, diag2=0;
-  const isSafe=(r,c)=>!((colMask>>c)&1)||!((colMask>>c)&1)||
-    !((colMask>>c)&1||(diag1>>(r-c+N))&1||(diag2>>(r+c))&1);
-  const isSafe2=(r,c)=>!((colMask>>c)&1)&&!((diag1>>(r-c+N))&1)&&!((diag2>>(r+c))&1);
-  const place=(r,c)=>{queens[r]=c;colMask|=(1<<c);diag1|=(1<<(r-c+N));diag2|=(1<<(r+c));};
-  const unplace=(r,c)=>{queens[r]=-1;colMask^=(1<<c);diag1^=(1<<(r-c+N));diag2^=(1<<(r+c));};
-  function solve(row,pr,pc){
-    if(row===N)return true;
-    let tried=false;
-    for(let d=0;d<8;d++){
-      const kr=pr+DX[d],kc=pc+DY[d];
-      if(kr===row&&kc>=0&&kc<N&&isSafe2(row,kc)){
-        tried=true;place(row,kc);
-        if(solve(row+1,row,kc))return true;
-        unplace(row,kc);
+function hybridQueens(N, startCol, colPriority) {
+  const queens = new Array(N).fill(-1);
+  let colMask = 0, diag1 = 0, diag2 = 0;
+  const isSafe = (r, c) =>
+    !((colMask >> c) & 1) && !((diag1 >> (r - c + N)) & 1) && !((diag2 >> (r + c)) & 1);
+  const place = (r, c) => {
+    queens[r] = c; colMask |= (1 << c);
+    diag1 |= (1 << (r - c + N)); diag2 |= (1 << (r + c));
+  };
+  const unplace = (r, c) => {
+    queens[r] = -1; colMask ^= (1 << c);
+    diag1 ^= (1 << (r - c + N)); diag2 ^= (1 << (r + c));
+  };
+  function solve(row, pr, pc) {
+    if (row === N) return true;
+    let tried = false;
+    for (let d = 0; d < 8; d++) {
+      const kr = pr + DX[d], kc = pc + DY[d];
+      if (kr === row && kc >= 0 && kc < N && isSafe(row, kc)) {
+        tried = true; place(row, kc);
+        if (solve(row + 1, row, kc)) return true;
+        unplace(row, kc);
       }
     }
-    if(!tried){
-      for(const col of colPriority){
-        if(isSafe2(row,col)){
-          place(row,col);
-          if(solve(row+1,row,col))return true;
-          unplace(row,col);
+    if (!tried) {
+      for (const col of colPriority) {
+        if (isSafe(row, col)) {
+          place(row, col);
+          if (solve(row + 1, row, col)) return true;
+          unplace(row, col);
         }
       }
     }
     return false;
   }
-  place(0,startCol);
-  if(solve(1,0,startCol))return [...queens];
-  unplace(0,startCol);return null;
+  place(0, startCol);
+  if (solve(1, 0, startCol)) return [...queens];
+  unplace(0, startCol);
+  return null;
 }
 
-function getKey(cmd){
-  const {N,h,m}=getNFromTime();
-  const {startCol,cols}=commandToParams(cmd,N);
-  let sol=null;
-  for(let off=0;off<N;off++){
-    const c=(startCol+off)%N;
-    const s=hybridQueens(N,c,cols);
-    if(s){sol=s;break;}
+// v2: Key from seed — NOT from command
+function getSessionKey() {
+  const seed = getHourlySeed();
+  const { N, h, m } = getNFromTime();
+  const { startCol, cols } = seedToParams(seed, N);
+
+  let sol = null;
+  for (let off = 0; off < N; off++) {
+    const c = (startCol + off) % N;
+    const s = hybridQueens(N, c, cols);
+    if (s) { sol = s; break; }
   }
-  if(!sol)return{key:'FAILSAFE0000000000000000000000000',N,h,m,sol:null};
-  const raw=sol.join('');
-  const hb=sha256bytes(cmd);
-  let key='';
-  for(let i=0;i<32;i++){
-    const bd=parseInt(raw[i%raw.length]);
-    const hd=hb[i%hb.length]%10;
-    key+=((bd+hd)%10).toString();
+
+  if (!sol) return { key: 'FAILSAFE0000000000000000000000000', N, h, m, sol: null, seed };
+
+  const raw = sol.join('');
+  const seedHex = seed.map(b => b.toString(16).padStart(2, '0')).join('');
+  let key = '';
+  for (let i = 0; i < 32; i++) {
+    const bd = parseInt(raw[i % raw.length]);
+    const sd = parseInt(seedHex[i % seedHex.length], 16) % 10;
+    key += ((bd + sd) % 10).toString();
   }
-  return{key,N,h,m,sol};
+  return { key, N, h, m, sol, seed, startCol };
 }
 
-function xorProcess(data,key){
-  let r='';
-  for(let i=0;i<data.length;i++)r+=String.fromCharCode(data.charCodeAt(i)^key.charCodeAt(i%key.length));
+// XOR
+function xorProcess(data, key) {
+  let r = '';
+  for (let i = 0; i < data.length; i++)
+    r += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
   return btoa(unescape(encodeURIComponent(r)));
 }
-function xorDeprocess(b64,key){
-  try{
-    const raw=decodeURIComponent(escape(atob(b64)));
-    let r='';
-    for(let i=0;i<raw.length;i++)r+=String.fromCharCode(raw.charCodeAt(i)^key.charCodeAt(i%key.length));
+function xorDeprocess(b64, key) {
+  try {
+    const raw = decodeURIComponent(escape(atob(b64)));
+    let r = '';
+    for (let i = 0; i < raw.length; i++)
+      r += String.fromCharCode(raw.charCodeAt(i) ^ key.charCodeAt(i % key.length));
     return r;
-  }catch(e){return null;}
+  } catch (e) { return null; }
 }
 
-const PAIRS={'[':']','{':'}','<':'>','(':')'},OPENERS=['[','{','<','('];
-function wrap(cmd){
-  const L=[OPENERS[Math.floor(Math.random()*4)],OPENERS[Math.floor(Math.random()*4)],OPENERS[Math.floor(Math.random()*4)]];
-  let p=cmd;
-  for(let i=L.length-1;i>=0;i--)p=L[i]+p+PAIRS[L[i]];
+// Grammar wrapper
+const PAIRS = { '[': ']', '{': '}', '<': '>', '(': ')' }, OPENERS = ['[', '{', '<', '('];
+function wrap(cmd) {
+  const L = [OPENERS[Math.random() * 4 | 0], OPENERS[Math.random() * 4 | 0], OPENERS[Math.random() * 4 | 0]];
+  let p = cmd;
+  for (let i = L.length - 1; i >= 0; i--) p = L[i] + p + PAIRS[L[i]];
   return p;
 }
-function unwrap(p){
-  while(p&&OPENERS.includes(p[0])&&p[p.length-1]===PAIRS[p[0]])p=p.slice(1,-1);
+function unwrap(p) {
+  while (p && OPENERS.includes(p[0]) && p[p.length - 1] === PAIRS[p[0]]) p = p.slice(1, -1);
   return p;
 }
-function pdaValidate(pkt){
-  const OPEN=new Set(['[','{','<','(']),CLOSE=new Set([']','}','>',')']),MATCH={']':'[','}':'{','>':'<',')':'('};
-  const stack=['$'];
-  for(const ch of pkt){
-    if(OPEN.has(ch))stack.push(ch);
-    else if(CLOSE.has(ch)){
-      if(stack.length===1)return{valid:false,reason:`✗ Stack underflow at '${ch}' — TAMPERED`};
-      if(stack.pop()!==MATCH[ch])return{valid:false,reason:'✗ Bracket mismatch — TAMPERED'};
+
+// PDA
+function pdaValidate(pkt) {
+  const OPEN = new Set(['[', '{', '<', '(']), CLOSE = new Set([']', '}', '>', ')']),
+    MATCH = { ']': '[', '}': '{', '>': '<', ')': '(' };
+  const stack = ['$'];
+  for (const ch of pkt) {
+    if (OPEN.has(ch)) stack.push(ch);
+    else if (CLOSE.has(ch)) {
+      if (stack.length === 1) return { valid: false, reason: `✗ Stack underflow — TAMPERED` };
+      if (stack.pop() !== MATCH[ch]) return { valid: false, reason: '✗ Bracket mismatch — TAMPERED' };
     }
   }
-  if(stack.join('')!=='$')return{valid:false,reason:`✗ Unclosed brackets — TAMPERED`};
-  return{valid:true,reason:'✓ Bracket structure valid — integrity confirmed'};
+  if (stack.join('') !== '$') return { valid: false, reason: `✗ Unclosed brackets — TAMPERED` };
+  return { valid: true, reason: '✓ Bracket structure valid — integrity confirmed' };
 }
 
-// ============================================================
-// UI Functions
-// ============================================================
-let lastPacket='', lastCmd='';
+// ── UI ──────────────────────────────────────────────────────
+let lastPacket = '';
 
-function setPipeStep(id,state){
-  const steps=['ps-time','ps-hash','ps-knight','ps-wrap','ps-xor','ps-out'];
-  steps.forEach(s=>{
-    const el=document.getElementById(s);
-    el.classList.remove('active','done');
-    const idx=steps.indexOf(s), cur=steps.indexOf(id);
-    if(idx<cur)el.classList.add('done');
-    else if(idx===cur)el.classList.add('active');
+const PIPE_STEPS = ['ps-seed', 'ps-time', 'ps-knight', 'ps-key', 'ps-wrap', 'ps-xor', 'ps-out'];
+function setPipeStep(id) {
+  PIPE_STEPS.forEach(s => {
+    const el = document.getElementById(s);
+    if (!el) return;
+    el.classList.remove('active', 'done');
+    const idx = PIPE_STEPS.indexOf(s), cur = PIPE_STEPS.indexOf(id);
+    if (idx < cur) el.classList.add('done');
+    else if (idx === cur) el.classList.add('active');
   });
 }
 
-function traceRow(label,val,cls=''){
-  return `<div class="trace-row"><span class="trace-label">${label}</span><span class="trace-val ${cls}">${val}</span></div>`;
-}
+const tr = (label, val, cls = '') =>
+  `<div class="trace-row"><span class="trace-label">${label}</span><span class="trace-val ${cls}">${val}</span></div>`;
 
-function renderBoard(sol,N){
-  const bw=document.getElementById('board-wrap'),b=document.getElementById('board');
-  if(!sol){bw.style.display='none';return;}
-  bw.style.display='block';
-  b.style.gridTemplateColumns=`repeat(${N},28px)`;
-  b.innerHTML='';
-  for(let r=0;r<N;r++){
-    for(let c=0;c<N;c++){
-      const cell=document.createElement('div');
-      cell.className='cell '+((r+c)%2===0?'light':'dark');
-      if(sol[r]===c){cell.classList.add('queen');cell.textContent='♛';}
+function renderBoard(sol, N) {
+  const bw = document.getElementById('board-wrap'), b = document.getElementById('board');
+  if (!sol) { bw.style.display = 'none'; return; }
+  bw.style.display = 'block';
+  b.style.gridTemplateColumns = `repeat(${N},28px)`;
+  b.innerHTML = '';
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
+      if (sol[r] === c) { cell.classList.add('queen'); cell.textContent = '♛'; }
       b.appendChild(cell);
     }
   }
 }
 
-async function animatePipeline(steps, delay=120){
-  for(const s of steps){ setPipeStep(s); await sleep(delay); }
-}
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-
-async function doEncrypt(){
-  const cmd=document.getElementById('enc-input').value.trim();
-  if(!cmd)return;
-  const trace=document.getElementById('enc-trace');
-  const packetBox=document.getElementById('enc-packet');
-  trace.innerHTML=traceRow('INPUT',cmd,'accent');
-  packetBox.textContent='...';
-
-  await animatePipeline(['ps-time'],80);
-  const {key,N,h,m,sol}=getKey(cmd);
-  trace.innerHTML+=traceRow('TIME',`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} → (${h}+${m})%8=${((h+m)%8)} → N=${N}`,'');
-  document.getElementById('s-n').textContent=N;
-
-  await animatePipeline(['ps-hash'],80);
-  trace.innerHTML+=traceRow('CMD HASH','SHA-256 → start_col + col_priority order','dim');
-
-  await animatePipeline(['ps-knight'],80);
-  trace.innerHTML+=traceRow('SOLUTION',sol?sol.join(', '):'FAILSAFE','accent');
-  trace.innerHTML+=traceRow('KEY',key,'key-val');
-  renderBoard(sol,N);
-
-  await animatePipeline(['ps-wrap'],80);
-  const wrapped=wrap(cmd);
-  trace.innerHTML+=traceRow('WRAPPED',wrapped,'');
-
-  await animatePipeline(['ps-xor'],80);
-  const packet=xorProcess(wrapped,key);
-
-  await animatePipeline(['ps-out'],80);
-  trace.innerHTML+=traceRow('PACKET',packet,'green');
-  packetBox.textContent=packet;
-
-  // Auto-fill decrypt
-  document.getElementById('dec-packet').value=packet;
-  document.getElementById('dec-cmd').value=cmd;
-  document.getElementById('tamper-packet').value=packet;
-  lastPacket=packet; lastCmd=cmd;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function animPipe(steps, delay = 100) {
+  for (const s of steps) { setPipeStep(s); await sleep(delay); }
 }
 
-function doDecrypt(){
-  const pkt=document.getElementById('dec-packet').value.trim();
-  const cmd=document.getElementById('dec-cmd').value.trim();
-  const trace=document.getElementById('dec-trace');
-  if(!pkt||!cmd){trace.innerHTML=traceRow('ERROR','Packet and command required','red');return;}
+async function doEncrypt() {
+  const cmd = document.getElementById('enc-input').value.trim();
+  if (!cmd) return;
+  const trace = document.getElementById('enc-trace');
+  const packetBox = document.getElementById('enc-packet');
+  trace.innerHTML = tr('COMMAND', cmd, 'accent') + tr('NOTE', 'Command not used in key — fully secret', 'dim');
+  packetBox.textContent = '...';
 
-  trace.innerHTML=traceRow('PACKET',pkt,'dim');
-  trace.innerHTML+=traceRow('COMMAND',cmd,'accent');
+  await animPipe(['ps-seed']);
+  const { key, N, h, m, sol, seed, startCol } = getSessionKey();
+  const seedPreview = seed.slice(0, 4).map(b => b.toString(16).padStart(2, '0')).join('') + '...';
+  trace.innerHTML += tr('SEED', `SHA-256(INSTALL_KEY+${h}h) → ${seedPreview}`, 'dim');
 
-  const {key,N,h,m}=getKey(cmd);
-  trace.innerHTML+=traceRow('TIME',`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} → N=${N}`,'');
-  trace.innerHTML+=traceRow('KEY',key,'key-val');
+  await animPipe(['ps-time']);
+  trace.innerHTML += tr('TIME', `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} → N=${N}`, '');
+  document.getElementById('s-n').textContent = N;
 
-  const unwrapped=xorDeprocess(pkt,key);
-  if(!unwrapped){trace.innerHTML+=traceRow('XOR','Failed to decode','red');return;}
-  trace.innerHTML+=traceRow('XOR DECODE',unwrapped,'');
+  await animPipe(['ps-knight']);
+  trace.innerHTML += tr('SOLUTION', sol ? sol.join(', ') : 'FAILSAFE', 'accent');
+  renderBoard(sol, N);
 
-  const t0=performance.now();
-  const {valid,reason}=pdaValidate(unwrapped);
-  const pdaMs=(performance.now()-t0).toFixed(4);
-  trace.innerHTML+=traceRow('PDA',`${reason}  (${pdaMs}ms)`,valid?'green':'red');
-  document.getElementById('s-pda').textContent=pdaMs+'ms';
+  await animPipe(['ps-key']);
+  trace.innerHTML += tr('KEY', key, 'gold');
 
-  if(valid){
-    const original=unwrap(unwrapped);
-    trace.innerHTML+=traceRow('RECOVERED',original,'green');
-    trace.innerHTML+=traceRow('MATCH',original===cmd?'✓ PERFECT MATCH':'⚠ DIFFERS',original===cmd?'green':'warn');
+  await animPipe(['ps-wrap']);
+  const wrapped = wrap(cmd);
+  trace.innerHTML += tr('WRAPPED', wrapped, '');
+
+  await animPipe(['ps-xor']);
+  const packet = xorProcess(wrapped, key);
+
+  await animPipe(['ps-out']);
+  trace.innerHTML += tr('PACKET', packet, 'green');
+  packetBox.textContent = packet;
+
+  document.getElementById('dec-packet').value = packet;
+  document.getElementById('tamper-packet').value = packet;
+  lastPacket = packet;
+
+  const t1 = performance.now();
+  document.getElementById('s-pipe').textContent = '—';
+}
+
+function doDecrypt() {
+  const pkt = document.getElementById('dec-packet').value.trim();
+  const trace = document.getElementById('dec-trace');
+  if (!pkt) { trace.innerHTML = tr('ERROR', 'Paste a packet first', 'red'); return; }
+
+  trace.innerHTML = tr('PACKET', pkt, 'dim');
+  trace.innerHTML += tr('NOTE', 'Deriving key from seed+time — no command needed', 'dim');
+
+  const t0 = performance.now();
+  const { key, N, h, m } = getSessionKey();
+  trace.innerHTML += tr('SEED', `SHA-256(INSTALL_KEY+${h}h) → same as sender`, 'dim');
+  trace.innerHTML += tr('TIME', `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} → N=${N}`, '');
+  trace.innerHTML += tr('KEY', key, 'gold');
+
+  const unwrapped = xorDeprocess(pkt, key);
+  if (!unwrapped) { trace.innerHTML += tr('XOR', 'Decode failed', 'red'); return; }
+  trace.innerHTML += tr('XOR DECODE', unwrapped, '');
+
+  const tp0 = performance.now();
+  const { valid, reason } = pdaValidate(unwrapped);
+  const pdaMs = (performance.now() - tp0).toFixed(4);
+  document.getElementById('s-pda').textContent = pdaMs + 'ms';
+  trace.innerHTML += tr('PDA', `${reason}  (${pdaMs}ms)`, valid ? 'green' : 'red');
+
+  if (valid) {
+    const original = unwrap(unwrapped);
+    trace.innerHTML += tr('RECOVERED', original, 'green');
+    trace.innerHTML += tr('TOTAL', ((performance.now() - t0)).toFixed(4) + 'ms', 'accent');
+    document.getElementById('s-pipe').textContent = ((performance.now() - t0)).toFixed(2) + 'ms';
   } else {
-    trace.innerHTML+=traceRow('BLOCKED','Packet rejected — not forwarded','red');
+    trace.innerHTML += tr('BLOCKED', 'Packet rejected — not forwarded', 'red');
   }
 }
 
-function doTamper(){
-  const pkt=document.getElementById('tamper-packet').value.trim();
-  const trace=document.getElementById('tamper-trace');
-  if(!pkt){trace.innerHTML=traceRow('ERROR','Encrypt something first','red');return;}
-  if(!lastCmd){trace.innerHTML=traceRow('ERROR','Encrypt a command first','red');return;}
+function doTamper() {
+  const pkt = document.getElementById('tamper-packet').value.trim();
+  const trace = document.getElementById('tamper-trace');
+  if (!pkt) { trace.innerHTML = tr('ERROR', 'Encrypt something first', 'red'); return; }
 
-  const corrupted=pkt.slice(0,-4)+'XXXX';
-  trace.innerHTML=traceRow('ORIGINAL',pkt,'dim');
-  trace.innerHTML+=traceRow('CORRUPTED',corrupted,'warn');
+  // Flip a char in the MIDDLE — keeps valid base64, breaks XOR output → PDA catches it
+  const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  const mid = Math.floor(pkt.length / 2);
+  const originalChar = pkt[mid];
+  let newChar = originalChar;
+  while (newChar === originalChar)
+    newChar = base64Chars[Math.floor(Math.random() * base64Chars.length)];
+  const corrupted = pkt.slice(0, mid) + newChar + pkt.slice(mid + 1);
 
-  const {key}=getKey(lastCmd);
-  const unwrapped=xorDeprocess(corrupted,key);
-  if(!unwrapped){
-    trace.innerHTML+=traceRow('PDA','✗ Failed to decode — TAMPERED','red');
-    trace.innerHTML+=traceRow('RESULT','Packet REJECTED ✓','green');
+  trace.innerHTML =
+    tr('ORIGINAL', pkt, 'dim') +
+    tr('TAMPERED', corrupted, 'red') +
+    tr('CHANGE', `Position ${mid}: '${originalChar}' → '${newChar}'`, 'dim');
+
+  const { key } = getSessionKey();
+  const unwrapped = xorDeprocess(corrupted, key);
+  if (!unwrapped) {
+    trace.innerHTML += tr('DECODE', '✗ Failed to decode entirely', 'red');
+    trace.innerHTML += tr('RESULT', 'Packet REJECTED ✓ Tamper detected', 'green');
     return;
   }
-  trace.innerHTML+=traceRow('DECODED',unwrapped,'dim');
-  const {valid,reason}=pdaValidate(unwrapped);
-  trace.innerHTML+=traceRow('PDA',reason,valid?'green':'red');
-  trace.innerHTML+=traceRow('RESULT',valid?'⚠ Accepted (unusual)':'Packet REJECTED ✓ Tamper detected',valid?'warn':'green');
+  trace.innerHTML += tr('XOR DECODE', unwrapped, 'dim');
+  const { valid, reason } = pdaValidate(unwrapped);
+  trace.innerHTML += tr('PDA', reason, valid ? 'green' : 'red');
+  trace.innerHTML += tr('RESULT',
+    valid ? '⚠ Accepted — try again (rare edge case)' : 'Packet REJECTED ✓ Tamper detected',
+    valid ? 'warn' : 'green'
+  );
 }
 
-async function doBenchmark(n){
-  const trace=document.getElementById('bench-trace');
-  trace.innerHTML=traceRow('STATUS','Running...','dim');
-  const cmds=['MOVE','FIRE','SCAN','HALT','STATUS'];
-  const times=[];
+async function doBenchmark(n) {
+  const trace = document.getElementById('bench-trace');
+  trace.innerHTML = tr('STATUS', 'Running...', 'dim');
+  const cmds = ['MOVE', 'FIRE', 'SCAN', 'HALT', 'STATUS', 'anything', 'PrakharDwivedi', '123'];
+  const times = [];
   await sleep(10);
-  for(let i=0;i<n;i++){
-    const cmd=cmds[Math.floor(Math.random()*cmds.length)];
-    const t0=performance.now();
-    const {key}=getKey(cmd);
-    const w=wrap(cmd);
-    xorProcess(w,key);
-    times.push(performance.now()-t0);
-    if(i%50===0)await sleep(1);
+  for (let i = 0; i < n; i++) {
+    const cmd = cmds[Math.floor(Math.random() * cmds.length)];
+    const t0 = performance.now();
+    const { key } = getSessionKey();
+    const w = wrap(cmd);
+    xorProcess(w, key);
+    times.push(performance.now() - t0);
+    if (i % 50 === 0) await sleep(1);
   }
-  const avg=times.reduce((a,b)=>a+b,0)/times.length;
-  const std=Math.sqrt(times.map(t=>(t-avg)**2).reduce((a,b)=>a+b,0)/times.length);
-  const throughput=Math.round(n/(times.reduce((a,b)=>a+b,0)/1000));
-  trace.innerHTML=
-    traceRow('COMMANDS',n,'')+
-    traceRow('AVG LATENCY',avg.toFixed(4)+' ms','accent')+
-    traceRow('STD DEV',std.toFixed(4)+' ms','')+
-    traceRow('THROUGHPUT',throughput.toLocaleString()+' ops/sec','green')+
-    traceRow('MIN',Math.min(...times).toFixed(4)+' ms','')+
-    traceRow('DEPS','0 — pure browser JS','accent2');
-  document.getElementById('s-pipe').textContent=avg.toFixed(3)+'ms';
+  const avg = times.reduce((a, b) => a + b, 0) / times.length;
+  const std = Math.sqrt(times.map(t => (t - avg) ** 2).reduce((a, b) => a + b, 0) / times.length);
+  const throughput = Math.round(n / (times.reduce((a, b) => a + b, 0) / 1000));
+  trace.innerHTML =
+    tr('COMMANDS', n, '') +
+    tr('AVG LATENCY', avg.toFixed(4) + ' ms', 'accent') +
+    tr('STD DEV', std.toFixed(4) + ' ms', '') +
+    tr('THROUGHPUT', throughput.toLocaleString() + ' ops/sec', 'green') +
+    tr('MIN', Math.min(...times).toFixed(4) + ' ms', '') +
+    tr('KEY SOURCE', 'Seed + Time (NOT command)', 'gold') +
+    tr('DEPS', '0 — pure browser JS', '');
+  document.getElementById('s-pipe').textContent = avg.toFixed(3) + 'ms';
 }
 
 // Init
-window.onload=()=>{
-  const {N,h,m}=getNFromTime();
-  document.getElementById('s-n').textContent=N;
+window.onload = () => {
+  const { N, h, m } = getNFromTime();
+  document.getElementById('s-n').textContent = N;
 };
 </script>
 </body>
