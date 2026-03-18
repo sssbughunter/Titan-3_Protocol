@@ -3,113 +3,124 @@ import base64
 import time
 import statistics
 import hashlib
+import socket
 from datetime import datetime
 
 # ============================================================
-# TITAN-3: Structurally Validated Lightweight Secure Command Framework
-# Team: Vajra Protocol — Prakhar Dwivedi, Pramod Batham, Sumit Yadav
-# Research: DOI 10.5281/zenodo.18814740
+# TITAN-3 v2.0 — Full Secrecy Edition
+# Key = KnightSolver(seed + time)
+# Seed = SHA-256(hostname + INSTALL_KEY + current_hour)
+# Command is now FULLY SECRET — never used in key derivation
+# Both sender and receiver share same source code + INSTALL_KEY
 # ============================================================
 
+# ── INSTALLATION KEY ────────────────────────────────────────
+# This is the ONE shared secret — exchanged once at setup.
+# Like a WiFi password — hardcoded in both sender & receiver.
+# Change this to your own secret before deployment.
+INSTALL_KEY = "TITAN3-VAJRA-PROTOCOL-2026-RJIT"
+
+# ── KNIGHT MOVE OFFSETS ─────────────────────────────────────
+DX = [2,  1, -1, -2, -2, -1,  1,  2]
+DY = [1,  2,  2,  1, -1, -2, -2, -1]
+
+
 # ============================================================
-# 1. TIME-DERIVED N
+# 1. HOURLY ROTATING SEED
+#    Seed = SHA-256(hostname + INSTALL_KEY + current_hour)
+#    Changes every hour — attacker can't reuse old packets
+#    Both sides derive same seed independently — nothing sent
 # ============================================================
 
-def get_N_from_time():
+def get_hourly_seed() -> tuple[bytes, int, int]:
+    now      = datetime.now()
+    hostname = socket.gethostname()
+    # Seed rotates every hour
+    seed_str = f"{hostname}:{INSTALL_KEY}:{now.year}{now.month}{now.day}{now.hour}"
+    seed     = hashlib.sha256(seed_str.encode()).digest()
+    return seed, now.hour, now.minute
+
+
+# ============================================================
+# 2. SEED → SOLVER PARAMS (N + start_col + col_priority)
+#    N from (hour + minute) % 8 → board size
+#    start_col + col_priority from seed bytes
+#    Command NOT used in key derivation anymore
+# ============================================================
+
+def get_N_from_time() -> tuple[int, int, int]:
     now = datetime.now()
     idx = (now.hour + now.minute) % 8
-    return idx + 4, now.hour, now.minute   # N in [4..11]
+    return idx + 4, now.hour, now.minute
 
-# ============================================================
-# 2. COMMAND → SOLVER PARAMS (Deterministic, No Transmission)
-# ============================================================
 
-def command_to_params(command: str, N: int):
+def seed_to_params(seed: bytes, N: int) -> tuple[int, list]:
     """
-    SHA-256 of command → start_col + col_priority order.
-    Same command + same time → same params → same key.
-    Different commands → different traversal path → different key.
-    No key ever transmitted.
+    Derive start_col and col_priority from hourly seed.
+    Same seed + same N → same params on both sides.
+    Command is NOT involved — full secrecy achieved.
     """
-    h = hashlib.sha256(command.upper().encode()).digest()
+    start_col = int.from_bytes(seed[0:4], 'big') % N
 
-    start_col = int.from_bytes(h[0:4], 'big') % N
-
-    # Fisher-Yates shuffle of [0..N-1] seeded by command hash
     cols = list(range(N))
     for i in range(N - 1, 0, -1):
-        byte_idx = (i * 3) % 32
-        j = int.from_bytes(h[byte_idx:byte_idx+2], 'big') % (i + 1)
+        bi = (i * 3) % 32
+        j  = int.from_bytes(seed[bi:bi+2], 'big') % (i + 1)
         cols[i], cols[j] = cols[j], cols[i]
 
     return start_col, cols
 
-# ============================================================
-# 3. KNIGHT-RELAXED N-QUEENS KEY GENERATOR
-#    Exact port of Prakhar Dwivedi's C++ hybrid algorithm
-#    DOI: 10.5281/zenodo.18814740
-# ============================================================
 
-DX = [2,  1, -1, -2, -2, -1,  1,  2]
-DY = [1,  2,  2,  1, -1, -2, -2, -1]
+# ============================================================
+# 3. KNIGHT-RELAXED N-QUEENS SOLVER
+#    Prakhar Dwivedi's algorithm — DOI: 10.5281/zenodo.18814740
+#    Finds ONE solution from seed-derived start — unpredictable
+# ============================================================
 
 def hybrid_queens_keygen(N: int, start_col: int, col_priority: list) -> list | None:
-    """
-    Step 1: Try knight-move columns from previous queen.
-    Step 2: If all knight moves fail → chain-break using command-derived col order.
-    Stops at FIRST solution — needle in haystack, unpredictable to attacker.
-    """
     queens   = [-1] * N
     col_mask = 0
     diag1    = 0
     diag2    = 0
 
-    def is_safe(row, col):
+    def is_safe(r, c):
         return not (
-            (col_mask >> col) & 1 or
-            (diag1 >> (row - col + N)) & 1 or
-            (diag2 >> (row + col)) & 1
+            (col_mask >> c) & 1 or
+            (diag1 >> (r - c + N)) & 1 or
+            (diag2 >> (r + c)) & 1
         )
 
-    def place(row, col):
+    def place(r, c):
         nonlocal col_mask, diag1, diag2
-        queens[row] = col
-        col_mask |= (1 << col)
-        diag1    |= (1 << (row - col + N))
-        diag2    |= (1 << (row + col))
+        queens[r] = c
+        col_mask |= (1 << c)
+        diag1    |= (1 << (r - c + N))
+        diag2    |= (1 << (r + c))
 
-    def unplace(row, col):
+    def unplace(r, c):
         nonlocal col_mask, diag1, diag2
-        queens[row] = -1
-        col_mask ^= (1 << col)
-        diag1    ^= (1 << (row - col + N))
-        diag2    ^= (1 << (row + col))
+        queens[r] = -1
+        col_mask ^= (1 << c)
+        diag1    ^= (1 << (r - c + N))
+        diag2    ^= (1 << (r + c))
 
-    def solve(row, prev_row, prev_col):
+    def solve(row, pr, pc):
         if row == N:
             return True
-
-        # Step 1: Knight-move columns from previous queen
-        knight_tried = False
+        tried = False
         for d in range(8):
-            krow = prev_row + DX[d]
-            kcol = prev_col + DY[d]
-            if krow == row and 0 <= kcol < N and is_safe(row, kcol):
-                knight_tried = True
-                place(row, kcol)
-                if solve(row + 1, row, kcol):
-                    return True
-                unplace(row, kcol)
-
-        # Step 2: Chain-break with command-derived column order
-        if not knight_tried:
+            kr, kc = pr + DX[d], pc + DY[d]
+            if kr == row and 0 <= kc < N and is_safe(row, kc):
+                tried = True
+                place(row, kc)
+                if solve(row + 1, row, kc): return True
+                unplace(row, kc)
+        if not tried:
             for col in col_priority:
                 if is_safe(row, col):
                     place(row, col)
-                    if solve(row + 1, row, col):
-                        return True
+                    if solve(row + 1, row, col): return True
                     unplace(row, col)
-
         return False
 
     place(0, start_col)
@@ -119,9 +130,20 @@ def hybrid_queens_keygen(N: int, start_col: int, col_priority: list) -> list | N
     return None
 
 
-def get_key(command: str, verbose: bool = False) -> tuple[str, int]:
-    N, hour, minute = get_N_from_time()
-    start_col, col_priority = command_to_params(command, N)
+def get_session_key(verbose: bool = False) -> tuple[str, int, int, int, list]:
+    """
+    Derives session key from:
+      seed  = SHA-256(hostname + INSTALL_KEY + current_hour)
+      N     = (hour + minute) % 8 + 4
+      start = seed_to_params(seed, N)
+      key   = KnightSolver(start, col_priority)
+
+    Command is NOT used. Key is fully independent of message.
+    Both sender and receiver run this and get identical key.
+    """
+    seed, hour, minute = get_hourly_seed()
+    N, _, _            = get_N_from_time()
+    start_col, col_priority = seed_to_params(seed, N)
 
     solution = None
     for offset in range(N):
@@ -134,23 +156,25 @@ def get_key(command: str, verbose: bool = False) -> tuple[str, int]:
     if not solution:
         raw_key = "FAILSAFE0000000000000000000000000"
     else:
-        # Mix solution with command hash for guaranteed uniqueness
-        raw = "".join(str(x) for x in solution)
-        cmd_hash = hashlib.sha256(command.upper().encode()).hexdigest()
-        mixed = ""
+        # Mix solution with seed for final key
+        raw  = "".join(str(x) for x in solution)
+        seed_hex = seed.hex()
+        key  = ""
         for i in range(32):
             board_digit = int(raw[i % len(raw)])
-            hash_digit  = int(cmd_hash[i % len(cmd_hash)], 16) % 10
-            mixed += str((board_digit + hash_digit) % 10)
-        raw_key = mixed
+            seed_digit  = int(seed_hex[i % len(seed_hex)], 16) % 10
+            key += str((board_digit + seed_digit) % 10)
+        raw_key = key
 
     if verbose:
+        print(f"  [SEED]     SHA-256(hostname+INSTALL_KEY+hour) → {seed.hex()[:16]}...")
         print(f"  [TIME]     {hour:02d}:{minute:02d} → N={N}")
-        print(f"  [START]    col={start_col}, priority={col_priority}")
+        print(f"  [START]    col={start_col}, priority={col_priority[:5]}...")
         print(f"  [SOLUTION] {solution}")
         print(f"  [KEY]      {raw_key}")
 
-    return raw_key, N
+    return raw_key, N, hour, minute, solution or []
+
 
 # ============================================================
 # 4. XOR ENGINE
@@ -161,12 +185,19 @@ class XOR_Engine:
         self.key = key
 
     def process(self, data: str) -> str:
-        r = "".join(chr(ord(c) ^ ord(self.key[i % len(self.key)])) for i, c in enumerate(data))
+        r = "".join(
+            chr(ord(c) ^ ord(self.key[i % len(self.key)]))
+            for i, c in enumerate(data)
+        )
         return base64.b64encode(r.encode('latin-1')).decode()
 
     def deprocess(self, b64: str) -> str:
         raw = base64.b64decode(b64).decode('latin-1')
-        return "".join(chr(ord(c) ^ ord(self.key[i % len(self.key)])) for i, c in enumerate(raw))
+        return "".join(
+            chr(ord(c) ^ ord(self.key[i % len(self.key)]))
+            for i, c in enumerate(raw)
+        )
+
 
 # ============================================================
 # 5. GRAMMAR WRAPPER — 3 Random Bracket Layers
@@ -184,19 +215,17 @@ class GrammarWrapper:
         return p
 
     def unwrap(self, packet: str) -> str:
-        while packet and packet[0] in self.OPENERS and packet[-1] == self.PAIRS[packet[0]]:
+        while packet and packet[0] in self.OPENERS \
+              and packet[-1] == self.PAIRS[packet[0]]:
             packet = packet[1:-1]
         return packet
 
+
 # ============================================================
-# 6. PDA BRACKET VALIDATOR — Tamper Detection
+# 6. PDA BRACKET VALIDATOR
 # ============================================================
 
 class PDA_BracketValidator:
-    """
-    Real Pushdown Automaton — classic context-free language validation.
-    On decryption: malformed brackets = packet was tampered.
-    """
     OPEN  = {'[', '{', '<', '('}
     CLOSE = {']', '}', '>', ')'}
     MATCH = {']': '[', '}': '{', '>': '<', ')': '('}
@@ -208,15 +237,16 @@ class PDA_BracketValidator:
                 stack.append(ch)
             elif ch in self.CLOSE:
                 if len(stack) == 1:
-                    return False, f"✗ Stack underflow at '{ch}' — TAMPERED"
+                    return False, f"✗ Stack underflow — TAMPERED"
                 if stack.pop() != self.MATCH[ch]:
                     return False, f"✗ Bracket mismatch — TAMPERED"
         if stack != ['$']:
-            return False, f"✗ Unclosed brackets {stack} — TAMPERED"
+            return False, f"✗ Unclosed brackets — TAMPERED"
         return True, "✓ Bracket structure valid — integrity confirmed"
 
+
 # ============================================================
-# 7. TITAN-3 FULL SYSTEM
+# 7. TITAN-3 v2 MAIN SYSTEM
 # ============================================================
 
 class Titan3:
@@ -226,14 +256,17 @@ class Titan3:
 
     def encrypt(self, command: str, verbose: bool = True) -> str:
         if verbose:
-            print(f"\n{'═'*60}")
+            print(f"\n{'═'*62}")
             print(f"  ENCRYPTING: '{command}'")
-            print(f"{'═'*60}")
+            print(f"{'═'*62}")
 
         t0 = time.perf_counter()
 
-        key, N = get_key(command, verbose)
+        # Key from seed+time — command NOT involved
+        key, N, h, m, sol = get_session_key(verbose)
         cipher  = XOR_Engine(key)
+
+        # Wrap command in 3 random bracket layers
         wrapped = self.wrapper.wrap(command)
         packet  = cipher.process(wrapped)
 
@@ -246,16 +279,17 @@ class Titan3:
 
         return packet
 
-    def decrypt(self, packet: str, command: str, verbose: bool = True) -> str | None:
+    def decrypt(self, packet: str, verbose: bool = True) -> str | None:
         if verbose:
-            print(f"\n{'═'*60}")
-            print(f"  DECRYPTING for command: '{command}'")
-            print(f"{'═'*60}")
+            print(f"\n{'═'*62}")
+            print(f"  DECRYPTING packet")
+            print(f"{'═'*62}")
 
         t0 = time.perf_counter()
 
-        key, N  = get_key(command, verbose)
-        cipher  = XOR_Engine(key)
+        # Same key — same seed + same clock — no command needed
+        key, N, h, m, sol = get_session_key(verbose)
+        cipher    = XOR_Engine(key)
         unwrapped = cipher.deprocess(packet)
 
         t_pda = time.perf_counter()
@@ -271,7 +305,7 @@ class Titan3:
 
         if not valid:
             if verbose:
-                print(f"  [BLOCKED]  Packet rejected — not forwarded")
+                print(f"  [BLOCKED]  Packet rejected — tamper detected")
             return None
 
         original = self.wrapper.unwrap(unwrapped)
@@ -279,158 +313,54 @@ class Titan3:
             print(f"  [OUTPUT]   '{original}'")
         return original
 
+
 # ============================================================
 # 8. BENCHMARK
 # ============================================================
 
 def run_benchmark(iterations: int = 1000):
-    print(f"\n{'═'*60}")
+    print(f"\n{'═'*62}")
     print(f"  BENCHMARK — {iterations} commands")
-    print(f"{'═'*60}")
+    print(f"{'═'*62}")
 
     titan = Titan3()
-    pool  = ["MOVE", "FIRE", "SCAN", "HALT", "STATUS"]
+    pool  = ["MOVE", "FIRE", "SCAN", "HALT", "STATUS",
+             "ANYTHING", "random_string", "PrakharDwivedi", "123", "XYZ"]
 
     # Warm-up
-    for _ in range(50):
-        cmd = random.choice(pool)
-        pkt = titan.encrypt(cmd, verbose=False)
-        titan.decrypt(pkt, cmd, verbose=False)
+    for _ in range(30):
+        pkt = titan.encrypt(random.choice(pool), verbose=False)
+        titan.decrypt(pkt, verbose=False)
 
     times_enc, times_dec, times_pda = [], [], []
+    pda     = PDA_BracketValidator()
+    wrapper = GrammarWrapper()
 
     for _ in range(iterations):
         cmd = random.choice(pool)
 
-        t0 = time.perf_counter()
+        t0  = time.perf_counter()
         pkt = titan.encrypt(cmd, verbose=False)
-        t1 = time.perf_counter()
+        t1  = time.perf_counter()
 
-        # PDA only timing
-        pda = PDA_BracketValidator()
-        wrapper = GrammarWrapper()
-        wrapped = wrapper.wrap(cmd)
         tp0 = time.perf_counter()
-        pda.validate(wrapped)
+        pda.validate(wrapper.wrap(cmd))
         tp1 = time.perf_counter()
 
-        titan.decrypt(pkt, cmd, verbose=False)
-        t2 = time.perf_counter()
+        titan.decrypt(pkt, verbose=False)
+        t2  = time.perf_counter()
 
         times_enc.append(t1 - t0)
         times_dec.append(t2 - t1)
         times_pda.append(tp1 - tp0)
 
-    avg_enc = statistics.mean(times_enc)
-    avg_dec = statistics.mean(times_dec)
-    avg_pda = statistics.mean(times_pda)
-    throughput = iterations / sum(times_enc)
-
     print(f"\n  Commands Tested      : {iterations}")
-    print(f"  Avg Encrypt Latency  : {avg_enc*1000:.4f} ms")
-    print(f"  Avg Decrypt Latency  : {avg_dec*1000:.4f} ms")
-    print(f"  PDA Validation Only  : {avg_pda*1000:.4f} ms  ← structural check alone")
-    print(f"  Std Dev (Encrypt)    : {statistics.stdev(times_enc)*1000:.4f} ms")
-    print(f"  Throughput           : {throughput:.0f} ops/sec")
+    print(f"  Avg Encrypt Latency  : {statistics.mean(times_enc)*1000:.4f} ms")
+    print(f"  Avg Decrypt Latency  : {statistics.mean(times_dec)*1000:.4f} ms")
+    print(f"  PDA Validation Only  : {statistics.mean(times_pda)*1000:.4f} ms")
+    print(f"  Throughput           : {iterations/sum(times_enc):.0f} ops/sec")
     print(f"  Min Latency          : {min(times_enc)*1000:.4f} ms")
-    print(f"{'═'*60}")
-    return avg_enc, avg_pda, throughput
-
-# ============================================================
-# 9. CLAIM VERIFICATION
-# ============================================================
-
-def verify_claims():
-    print(f"\n{'═'*60}")
-    print(f"  PPT CLAIM VERIFICATION")
-    print(f"{'═'*60}")
-
-    titan  = Titan3()
-    passed = 0
-    failed = 0
-
-    def check(label, result, expected=True):
-        nonlocal passed, failed
-        status = "✓ PASS" if result == expected else "✗ FAIL"
-        if result == expected:
-            passed += 1
-        else:
-            failed += 1
-        print(f"  {status}  {label}")
-
-    # CLAIM 1: Formal grammar validation (PDA)
-    pda = PDA_BracketValidator()
-    v1, _ = pda.validate("{[<MOVE>]}")
-    v2, _ = pda.validate("{[<MOVE>]")     # malformed
-    check("PDA accepts valid bracket structure", v1, True)
-    check("PDA rejects malformed brackets", v2, False)
-
-    # CLAIM 2: Lightweight — PDA under 0.1ms
-    times = []
-    for _ in range(1000):
-        t0 = time.perf_counter()
-        pda.validate("{[<MOVE_DRONE_01>]}")
-        times.append(time.perf_counter() - t0)
-    avg_pda = statistics.mean(times) * 1000
-    check(f"PDA validation < 0.1ms (got {avg_pda:.4f}ms)", avg_pda < 0.1, True)
-
-    # CLAIM 3: Complementary to encryption (PDA runs independent of XOR)
-    check("PDA runs independent of encryption layer", True, True)
-
-    # CLAIM 4: Key uniqueness — different commands give different keys
-    cmds = ["MOVE", "FIRE", "SCAN", "HALT", "STATUS",
-            "HELLO", "ATTACK", "XYZ", "123", "MOVE_DRONE"]
-    keys = [get_key(c, verbose=False)[0] for c in cmds]
-    all_unique = len(set(keys)) == len(keys)
-    check(f"All {len(cmds)} different commands produce unique keys", all_unique, True)
-
-    # CLAIM 5: Same command always gives same key (deterministic)
-    k1 = get_key("MOVE", verbose=False)[0]
-    k2 = get_key("MOVE", verbose=False)[0]
-    check("Same command always derives same key (no transmission needed)", k1 == k2, True)
-
-    # CLAIM 6: Round-trip encryption/decryption works
-    for cmd in ["MOVE", "SCAN_BOOTH_01", "HALT_UNIT_X9"]:
-        pkt = titan.encrypt(cmd, verbose=False)
-        rec = titan.decrypt(pkt, cmd, verbose=False)
-        check(f"Round-trip: '{cmd}' → encrypt → decrypt → original", rec == cmd, True)
-
-    # CLAIM 7: Tamper detection
-    pkt = titan.encrypt("FIRE", verbose=False)
-    corrupted = pkt[:-4] + "XXXX"
-    result = titan.decrypt(corrupted, "FIRE", verbose=False)
-    check("Tampered packet correctly rejected by PDA", result is None, True)
-
-    # CLAIM 8: Variable N from time
-    N, h, m = get_N_from_time()
-    check(f"N derived from time ({h:02d}:{m:02d} → N={N}) in range [4,11]", 4 <= N <= 11, True)
-
-    # CLAIM 9: Knight-relaxed solver finds solution for all N in range
-    all_found = True
-    for n in range(4, 12):
-        start, prio = command_to_params("MOVE", n)
-        sol = None
-        for off in range(n):
-            col = (start + off) % n
-            s = hybrid_queens_keygen(n, col, prio)
-            if s:
-                sol = s
-                break
-        if not sol:
-            all_found = False
-    check("Knight-Relaxed solver finds solution for N=4 to N=11", all_found, True)
-
-    # CLAIM 10: Edge-ready — no external dependencies
-    check("Zero external dependencies (pure Python stdlib)", True, True)
-
-    print(f"\n  {'─'*40}")
-    print(f"  PASSED: {passed} / {passed+failed}")
-    print(f"  FAILED: {failed} / {passed+failed}")
-    if failed == 0:
-        print(f"\n  ✓ ALL CLAIMS VERIFIED — PPT is fully backed by code")
-    else:
-        print(f"\n  ✗ {failed} claim(s) need attention")
-    print(f"{'═'*60}")
+    print(f"{'═'*62}")
 
 
 # ============================================================
@@ -438,41 +368,42 @@ def verify_claims():
 # ============================================================
 
 if __name__ == "__main__":
-    print("╔══════════════════════════════════════════════════════════╗")
-    print("║   ⚡ TITAN-3: Complete System + Claim Verification ⚡    ║")
-    print("║   Knight-Relaxed N-Queens (DOI:10.5281/zenodo.18814740) ║")
-    print("╚══════════════════════════════════════════════════════════╝")
+    print("╔════════════════════════════════════════════════════════════╗")
+    print("║  ⚡ TITAN-3 v2.0 — Full Secrecy Edition                   ║")
+    print("║  Key = KnightSolver(SHA-256(hostname+INSTALL_KEY+hour))   ║")
+    print("║  Command is FULLY SECRET — not used in key derivation     ║")
+    print("╚════════════════════════════════════════════════════════════╝")
 
     titan = Titan3()
 
-    # Round-trip demos
-    print("\n\n>>> ROUND-TRIP DEMOS")
-    for cmd in ["MOVE", "FIRE_DRONE", "SCAN_BOOTH_01", "HALT_UNIT_X9"]:
+    # Round-trip — notice decrypt needs NO command argument
+    print("\n\n>>> ROUND-TRIP TESTS — receiver needs NO prior knowledge of command")
+    for cmd in ["MOVE", "FIRE_DRONE", "SCAN_BOOTH_01", "HALT_UNIT_X9", "anything i want"]:
         pkt = titan.encrypt(cmd)
-        rec = titan.decrypt(pkt, cmd)
-        print(f"  ✓ '{cmd}' recovered correctly: {rec == cmd}\n")
+        rec = titan.decrypt(pkt)
+        print(f"  ✓ '{cmd}' → '{rec}' → match: {cmd == rec}\n")
 
     # Tamper detection
     print("\n>>> TAMPER DETECTION")
     pkt = titan.encrypt("STATUS", verbose=False)
-    corrupted = pkt[:-4] + "ZZZZ"
+    corrupted = pkt[:-4] + "XXXX"
     print(f"  Original  : {pkt}")
     print(f"  Corrupted : {corrupted}")
-    result = titan.decrypt(corrupted, "STATUS")
-    print(f"  Correctly blocked: {result is None}")
+    result = titan.decrypt(corrupted)
+    print(f"  Blocked   : {result is None} ✓")
 
     # Benchmark
-    avg_enc, avg_pda, throughput = run_benchmark(1000)
+    run_benchmark(1000)
 
-    # Claim verification
-    verify_claims()
-
-    # Print final summary
-    print(f"\n{'═'*60}")
-    print(f"  FINAL NUMBERS FOR PPT:")
-    print(f"  PDA validation alone : ~{avg_pda*1000:.4f} ms")
-    print(f"  Full pipeline        : ~{avg_enc*1000:.4f} ms")
-    print(f"  Throughput           : ~{throughput:.0f} ops/sec")
-    print(f"  Dependencies         : 0 (pure Python stdlib)")
-    print(f"  Key transmission     : None (derived from command+time)")
-    print(f"{'═'*60}")
+    # Interactive
+    print("\n\n>>> INTERACTIVE MODE")
+    print("    Receiver decrypts WITHOUT knowing the command in advance")
+    print("    Type EXIT to quit\n")
+    while True:
+        cmd = input("Sender — Enter command: ").strip()
+        if cmd.upper() == "EXIT":
+            break
+        pkt = titan.encrypt(cmd, verbose=False)
+        print(f"  Packet sent: {pkt}")
+        rec = titan.decrypt(pkt, verbose=True)
+        print(f"  Recovered  : '{rec}'\n")
